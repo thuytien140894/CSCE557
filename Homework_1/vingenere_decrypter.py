@@ -15,10 +15,10 @@ Date last modified: 04 February 2015
 
 # Global constants
 _FREQUENCIES_OF_LETTERS = [0.082, 0.015, 0.028, 0.043, 0.127, 0.022,
-					      0.020, 0.061, 0.070, 0.002, 0.008, 0.040,
-						  0.024, 0.067, 0.075, 0.019, 0.001, 0.060,
-						  0.063, 0.091, 0.028, 0.010, 0.023, 0.001,
-						  0.020, 0.001]
+                           0.020, 0.061, 0.070, 0.002, 0.008, 0.040,
+                           0.024, 0.067, 0.075, 0.019, 0.001, 0.060,
+                           0.063, 0.091, 0.028, 0.010, 0.023, 0.001,
+                           0.020, 0.001]
 _ROTATING_TEMPLATE = _FREQUENCIES_OF_LETTERS * 2
 _HIGHEST_POSSIBLE_KEY_LENGTH = 10
 _OFFSET = 97
@@ -40,7 +40,7 @@ def perform_dot_product (a, b):
 	"""
 	sum = 0.0
 	for x, y in zip(a, b):
-		sum += (x*y)
+        sum += (x*y)
 
 	return sum
 
@@ -131,12 +131,12 @@ def find_key(text, key_length):
 	"""
 	key = []
 	alphabet = collections.OrderedDict([('a', 0), ('b', 0), ('c', 0), ('d', 0),
-										('e', 0), ('f', 0), ('g', 0), ('h', 0),
-										('i', 0), ('j', 0), ('k', 0), ('l', 0),
-										('m', 0), ('n', 0), ('o', 0), ('p', 0),
-										('q', 0), ('r', 0), ('s', 0), ('t', 0),
-										('u', 0), ('v', 0), ('w', 0), ('x', 0),
-										('y', 0), ('z', 0)])
+                                        ('e', 0), ('f', 0), ('g', 0), ('h', 0),
+                                        ('i', 0), ('j', 0), ('k', 0), ('l', 0),
+                                        ('m', 0), ('n', 0), ('o', 0), ('p', 0),
+                                        ('q', 0), ('r', 0), ('s', 0), ('t', 0),
+                                        ('u', 0), ('v', 0), ('w', 0), ('x', 0),
+                                        ('y', 0), ('z', 0)])
 
 	for j in range(key_length):
 		# reset the dot_products and the alphabet frequency
@@ -151,7 +151,7 @@ def find_key(text, key_length):
 			alphabet[text[i]] += 1
 
 		vector_of_occurrences = ([x / float(number_of_letters_counted)
-							   for x in alphabet.values()])
+                                  for x in alphabet.values()])
 
 		for i in range(_NUMBER_OF_ALPHABET_LETTERS):
 			# in order to perform cyclic right shift of the vector of English
@@ -161,10 +161,10 @@ def find_key(text, key_length):
 			start_position = len(_FREQUENCIES_OF_LETTERS) - i
 			end_position = len(_ROTATING_TEMPLATE) - i
 			shiftedvector_of_occurrences = (_ROTATING_TEMPLATE[start_position:
-										  					   end_position])
+                                                               end_position])
 
 			dot_product = perform_dot_product(vector_of_occurrences,
-									       shiftedvector_of_occurrences)
+                                              shiftedvector_of_occurrences)
 			dot_products.append(dot_product)
 
 		print dot_products
@@ -237,7 +237,7 @@ def print_output(cipher_text, key_text, decrypted_text):
 
 	Parameters:
 		cipher_text: A string that is the ciphertext
-	    key_text: A string that is the key
+        key_text: A string that is the key
 		decrypted_text: A string that is the decrypted text
 
 	Output:
