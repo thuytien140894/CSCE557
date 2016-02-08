@@ -10,7 +10,7 @@ The main method reads in the file that contains the cipher_text and invokes
 all these methods to output the dycrypted text.
 
 Author/copyright: Tien Ho. All rights reserved.
-Date last modified: 04 February 2015
+Date last modified: 08 February 2015
 """
 
 # Global constants
@@ -41,7 +41,6 @@ def perform_dot_product (a, b):
     sum = 0.0
     for x, y in zip(a, b):
         sum += (x*y)
-
 
     return sum
 
@@ -219,6 +218,7 @@ def decrypt(text, key):
     decrypted_letters = []
     decrypted_text = ''
     key_length = len(key)
+
     for i in range(len(text)):
         letter_number = ord(text[i]) - _OFFSET
         key_letter_number = key[i % key_length]
@@ -249,7 +249,7 @@ def print_output(cipher_text, key_text, decrypted_text):
         None
     """
     print 'Ciphertext: \n' + cipher_text + '\n'
-    print 'Key Used for Encryption: \n' + key_text + '\n'
+    print 'Keyword: \n' + key_text + '\n'
     print 'Decrypted Text: \n' + decrypted_text + '\n'
 
 def main():
@@ -271,6 +271,7 @@ def main():
     with open(sys.argv[1], 'r') as file:
         cipher_text = file.read()
         cipher_text = cipher_text.replace('\n', '')
+        cipher_text = cipher_text.replace('\r', '')
 
     key_length = find_key_length(cipher_text);
     key = find_key(cipher_text, key_length)
