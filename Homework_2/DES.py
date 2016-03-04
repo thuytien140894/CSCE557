@@ -4,21 +4,28 @@ and decryption.
 
 This program creates a static class DES that has functions to perform
 four rounds of a Feistel System on a 12-bit input bitstring using a 9-bit key.
-The class also tests for weak keys for this four-round DES-type algorithm.
+The class also tests for weak keys for this four-round DES-typed algorithm.
 
 Author/copyright: Tien Ho. All rights reserved.
 Date last modified: 03 March 2016
 """
 class DES(object):
-    s_1 = [['101', '010', '001', '110', '011', '100', '111', '000'],
+    """
+    Class 'DES' has class methods to encrypt and decrypt using the simplified
+    DES algorithm. The class also tests for weak keys in this algorithm. 
+    """
+    S_1 = [['101', '010', '001', '110', '011', '100', '111', '000'],
            ['001', '100', '110', '010', '000', '111', '101', '011']]
-    s_2 = [['100', '000', '110', '101', '111', '001', '011', '010'],
+    S_2 = [['100', '000', '110', '101', '111', '001', '011', '010'],
            ['101', '011', '000', '111', '110', '010', '001', '100']]
     log_file = open('logfile', 'w')
     input_for_next_round = ''
     rotating_key_template = ''
     key_position = 0
     round_number = 0
+    key_length = 0
+    bitstring_length = 0
+
 
     @classmethod
     def initialize(cls, bitstring, key):
@@ -37,6 +44,8 @@ class DES(object):
         cls.rotating_key_template = key * 2
         cls.key_position = 0
         cls.round_number = 0
+        cls.key_length = len(key)
+        cls.bitstring_length = len(bitstring)
 
     @classmethod
     def encrypt(cls, number_of_rounds, print_output):
@@ -71,12 +80,14 @@ class DES(object):
         if (number_of_rounds == 0):
             return cls.input_for_next_round
 
+        half_length = cls.bitstring_length / 2
         previous_input = cls.input_for_next_round
-        previous_left_bits = cls.input_for_next_round[0:6]
-        previous_right_bits = cls.input_for_next_round[6:]
-        key_position = cls.key_position % 9
+        previous_left_bits = cls.input_for_next_round[0:half_length]
+        previous_right_bits = cls.input_for_next_round[half_length:]
+        key_position = cls.key_position % cls.key_length
 
-        key = cls.rotating_key_template[key_position: key_position + 8]
+        key = cls.rotating_key_template[key_position: key_position +
+                                        (cls.key_length - 1)]
         left_bits = previous_right_bits
         function_output = cls.compute_function(previous_right_bits, key)
         right_bits = cls.perform_xor(previous_left_bits, function_output)
@@ -124,10 +135,12 @@ class DES(object):
         if (number_of_rounds == 0):
             return output
 
-        left_bits = output[0:6]
-        right_bits = output[6:]
+        half_length = cls.bitstring_length / 2
+        left_bits = output[0:half_length]
+        right_bits = output[half_length:]
         key_position = number_of_rounds - 1
-        key = cls.rotating_key_template[key_position: key_position + 8]
+        key = cls.rotating_key_template[key_position: key_position +
+                                        (cls.key_length - 1)]
         function_output = cls.compute_function(left_bits, key)
         previous_left_bits = cls.perform_xor(right_bits, function_output)
         previous_right_bits = left_bits
@@ -182,8 +195,8 @@ class DES(object):
         s_input = cls.perform_xor(expandedBitstring, key)
         s_1_input = s_input[0:4]
         s_2_input = s_input[4:]
-        s_1_output = cls.s_1[int(s_1_input[0])][int(s_1_input[1:], 2)]
-        s_2_output = cls.s_2[int(s_2_input[0])][int(s_2_input[1:], 2)]
+        s_1_output = cls.S_1[int(s_1_input[0])][int(s_1_input[1:], 2)]
+        s_2_output = cls.S_2[int(s_2_input[0])][int(s_2_input[1:], 2)]
 
         output = s_1_output + s_2_output
 
@@ -250,7 +263,8 @@ class DES(object):
         Returns:
             a 12-bit bitstring whose left and right halves are swapped
         """
-        swapped_bitstring = bitstring[6:] + bitstring[0:6]
+        half_length = len(bitstring) / 2
+        swapped_bitstring = bitstring[half_length:] + bitstring[0:half_length]
 
         return swapped_bitstring
 
@@ -322,9 +336,9 @@ class DES(object):
             None
         """
         weak_keys = []
-        all_possible_keys = cls.generate_all_possible_bitstrings(9)
+        all_possible_keys = cls.generate_all_possible_bitstrings(cls.key_length)
         all_possible_input_bitstrings = (
-                cls.generate_all_possible_bitstrings(12))
+                cls.generate_all_possible_bitstrings(cls.bitstring_length))
 
         for i in range(len(all_possible_keys)):
             key = all_possible_keys[i]
