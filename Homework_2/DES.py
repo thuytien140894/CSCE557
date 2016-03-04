@@ -12,7 +12,7 @@ Date last modified: 03 March 2016
 class DES(object):
     """
     Class 'DES' has class methods to encrypt and decrypt using the simplified
-    DES algorithm. The class also tests for weak keys in this algorithm. 
+    DES algorithm. The class also tests for weak keys in this algorithm.
     """
     S_1 = [['101', '010', '001', '110', '011', '100', '111', '000'],
            ['001', '100', '110', '010', '000', '111', '101', '011']]
@@ -25,7 +25,6 @@ class DES(object):
     round_number = 0
     key_length = 0
     bitstring_length = 0
-
 
     @classmethod
     def initialize(cls, bitstring, key):
