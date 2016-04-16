@@ -139,18 +139,31 @@ def finite_field_gauss_elimination(matrix, prime):
                         matrix[i][j] = matrix[i][j] - ratio*matrix[k][j]
                         matrix[i][j] = matrix[i][j] % prime
 
-    matrix = finite_field_reduce_matrix(matrix, prime)
-
     return matrix
 
-def solve_for_logarithms():
-    return
+def solve_for_logarithms(log_relations, prime):
+    log_relations = finite_field_gauss_elimination(log_relations, prime)
+    log_relations = finite_field_reduce_matrix(log_relations, prime)
 
-def find_logarithmic_relations(factor_base, prime, generator):
+    return log_relations
+
+def compute_logarithmic_relations(factor_base, prime, generator):
     log_relations = []
     limit = len(factor_base) * 2
+    starting_exponent = 1
 
-    for i in range(50, prime):
+    log_relations = find_relations(factor_base, prime, generator, log_relations, limit, starting_exponent)
+    while not is_linearly_independent(log_relations, prime):
+        limit += 2
+        number_of_relations = len(log_relations)
+        number_of_primes = len(factor_base)
+        starting_exponent = log_relations[number_of_relations - 1][number_of_primes] + 1
+        log_relations = find_relations(factor_base, prime, generator, log_relations, limit, starting_exponent)
+
+    return log_relations
+
+def find_relations(factor_base, prime, generator, log_relations, limit, starting_exponent):
+    for i in range(starting_exponent, prime):
         relation = [0] * len(factor_base)
         sieving_value = (generator ** i) % prime
         for j in range(len(factor_base)):
@@ -169,19 +182,35 @@ def find_logarithmic_relations(factor_base, prime, generator):
 
     return log_relations
 
-def is_linearly_independent(new_relation, existing_relations):
-    if len(existing_relations) == 0:
-        return True
+def is_linearly_independent(log_relations, prime):
+    clone = copy_matrix(log_relations)
+    matrix = finite_field_gauss_elimination(clone, prime)
+    ncol = len(matrix[0])
 
+    # if one of the pivots is zero, the columns are not linearly independent.
+    for i in range(ncol - 1):
+        if matrix[i][i] == 0:
+            return False
 
+    return True
 
-    return
+def copy_matrix(matrix):
+    clone = []
+    for row in matrix:
+        _row = []
+        for value in row:
+            _row.append(value)
+        clone.append(_row)
+
+    return clone
 
 def compute_discrete_log(prime, generator, output):
-    factor_base = sieve_of_Eratosthenes(10)
-    log_relations = find_logarithmic_relations(factor_base, prime, generator)
+    factor_base = sieve_of_Eratosthenes(15)
+    print factor_base
+    log_relations = compute_logarithmic_relations(factor_base, prime, generator)
+    log_relations = solve_for_logarithms(log_relations, prime / 2)
 
-    print log_relations
+    print_matrix(log_relations)
     # sample = [[2, 0, 0, 2, 74],
     #           [7, 1, 0, 0, 64],
     #           [0, 0, 1, 1, 87],
@@ -202,9 +231,6 @@ def compute_discrete_log(prime, generator, output):
     # [1, 0, 1, 1, 0, 1, 0], [0, 0, 0, 1, 0, 0, 0],
     # [0, 1, 0, 0, 1, 0, 0]]
 
-    result = finite_field_gauss_elimination(log_relations, 251)
-    print_matrix(result)
-
     return
 
 def print_matrix(matrix):
@@ -217,28 +243,16 @@ def print_matrix(matrix):
 
 def main():
     generator = 5
-    prime = 503
+    prime = 14087
     output = 20
 
-    # x = compute_discrete_log(prime, generator, output)
-
-    # l = sieve_of_Eratosthenes(1000)
-    # print l
-    #
     # matrix = [[1, 1, 0, 0, 0, 0, 2], [1, 0, 0, 1, 1, 0, 2],
     #             [1, 1, 0, 1, 0, 0, 2],[0, 1, 0, 0, 1, 0, 2],
     #             [1, 0, 1, 1, 0, 1, 2], [0, 0, 0, 1, 0, 0, 0],
     #             [0, 1, 0, 0, 1, 0, 2]]
-    #
-    # matrix = gauss_jordan_elimination(matrix)
-    # print_matrix(matrix)
 
     compute_discrete_log(prime, generator, output)
 
-    matrix = [[3, 1, 4, 1], [5, 2, 6, 5], [0, 5, 2, 1]]
-    # new_matrix = finite_field_gauss_elimination(matrix, 7)
-    # new_matrix = gauss_jordan_elimination(matrix)
-    # print_matrix(new_matrix)
     return
 
 if __name__ == '__main__':
