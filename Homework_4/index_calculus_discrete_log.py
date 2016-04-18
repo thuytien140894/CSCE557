@@ -78,6 +78,8 @@ def multiplicative_inverse(n, p):
             x1 += b0
 
         return x1
+    else:
+        return 0
 
 def chinese_remainder(set_of_modulus, set_of_congruences):
     product = 1
@@ -197,7 +199,21 @@ def solve_for_logarithms(log_relations, prime):
 
     return log_relations
 
-def find_logarithmic_solutions(log_relations, factor_base, prime):
+# compute final solutions using Chinese Remainder Theorem
+def combine_solutions(solutions, prime):
+    factors = [2, (prime - 1) / 2]
+    solution = []
+    for i in range(len(solutions[0])):
+        congruences = []
+        for j in range(len(solutions)):
+            congruences.append(solutions[j][i])
+
+        s = chinese_remainder(factors, congruences)
+        solution.append(s)
+
+    return solution
+
+def find_logarithmic_solution(log_relations, factor_base, prime):
     solutions = []
     # we assume that the factorization is known
     factors = [2, (prime - 1) / 2]
@@ -212,21 +228,7 @@ def find_logarithmic_solutions(log_relations, factor_base, prime):
 
         solutions.append(_solution)
 
-    return solutions
-
-# compute final solutions using Chinese Remainder Theorem
-def combine_solutions(solutions, prime):
-    factors = [2, (prime - 1) / 2]
-    solution = []
-    for i in range(len(solutions[0])):
-        congruences = []
-        for j in range(len(solutions)):
-            congruences.append(solutions[j][i])
-
-        s = chinese_remainder(factors, congruences)
-        solution.append(s)
-
-    return solution
+    return combine_solutions(solutions, prime)
 
 def compute_individual_log(log_solution, prime, generator, output, factor_base):
     log_coefficients = []
@@ -250,23 +252,27 @@ def compute_individual_log(log_solution, prime, generator, output, factor_base):
 def compute_discrete_log(prime, generator, output, B):
     factor_base = sieve_of_Eratosthenes(B)
     print 'Factor base', factor_base
+
+    # Step 1
     log_relations = compute_logarithmic_relations(factor_base, prime, generator)
 
+    # Step 2
     # for our purpose, we assume that the factorization of p - 1 is known.
     # We solve the linear system of these smooth relations separately for each
     # prime factor and then use the Chinese Remainder Theorem to obtain the
     # final solution.
 
     # Our prime p is 14087 --> p - 1 = 14086 = 2 * 7043
-    solutions = find_logarithmic_solutions(log_relations, factor_base, prime)
-    final_solution = combine_solutions(solutions, prime)
-    result = compute_individual_log(final_solution, prime,
+    solution = find_logarithmic_solution(log_relations, factor_base, prime)
+
+    # Step 3
+    result = compute_individual_log(solution, prime,
                                     generator, output, factor_base)
 
-    print final_solution
+    print solution
     print result
 
-    return
+    return result
 
 def print_matrix(matrix):
     s = [[str(e) for e in row] for row in matrix]
@@ -283,7 +289,7 @@ def main():
     output = 5872
     B = 15
 
-    compute_discrete_log(prime, generator, output, B)
+    result = compute_discrete_log(prime, generator, output, B)
 
     return
 
