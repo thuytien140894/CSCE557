@@ -1,23 +1,21 @@
 import math
 
+# Helper functions
 def swap_rows(matrix, row_1, row_2):
     row = matrix[row_1]
     matrix[row_1] = matrix[row_2]
     matrix[row_2] = row
     return matrix
 
-def reduce_matrix(matrix):
-    ncol = len(matrix[0])
-    nrow = len(matrix)
-    npivot = min(nrow,ncol-1)
+def copy_matrix(matrix):
+    clone = []
+    for row in matrix:
+        _row = []
+        for value in row:
+            _row.append(value)
+        clone.append(_row)
 
-    for i in range(npivot):
-        divisor = matrix[i][i]
-        if divisor != 0:
-            for j in range(i, ncol):
-                matrix[i][j] = matrix[i][j] / divisor
-
-    return matrix
+    return clone
 
 def finite_field_reduce_matrix(matrix, prime):
     ncol = len(matrix[0])
@@ -95,37 +93,6 @@ def chinese_remainder(set_of_modulus, set_of_congruences):
 
     return sum % product
 
-def gauss_jordan_elimination(matrix):
-    ncol = len(matrix[0])
-    nrow = len(matrix)
-    npivot = min(nrow,ncol-1)
-
-    for k in range(npivot):
-        # swap rows to get a pivot of 1
-        for j in range(k, nrow):
-            if matrix[j][k] == 1:
-                matrix = swap_rows(matrix, k, j)
-                break
-
-        # swap rows to get a nonzero pivot
-        if matrix[k][k] == 0:
-            for j in range(k+1,nrow):
-                if matrix[j][k] != 0:
-                    matrix = swap_rows(matrix,k,j)
-                    break
-
-        if matrix[k][k] != 0:
-            for i in range(nrow):
-                if i != k and matrix[i][k] != 0:
-                    ratio = float(matrix[i][k]) / matrix[k][k]
-                    for j in range(k, ncol):
-                        matrix[i][j] = matrix[i][j] - ratio*matrix[k][j]
-
-        print_matrix(matrix)
-
-    # make the pivot entries all 1s
-    return reduce_matrix(matrix)
-
 def finite_field_gauss_elimination(matrix, prime):
     ncol = len(matrix[0])
     nrow = len(matrix)
@@ -156,11 +123,35 @@ def finite_field_gauss_elimination(matrix, prime):
 
     return matrix
 
-def solve_for_logarithms(log_relations, prime):
-    log_relations = finite_field_gauss_elimination(log_relations, prime)
-    log_relations = finite_field_reduce_matrix(log_relations, prime)
+# check if a number is factored completely over a factor base
+def is_smooth(n, factor_base):
+    factorization = []
+    for p in factor_base:
+        exponent = 0
+        while n % p == 0:
+            n /= p
+            exponent += 1
+        factorization.append(exponent)
 
-    return log_relations
+    if n != 1:
+        return []
+
+    return factorization
+
+def is_linearly_independent(log_relations, prime):
+    clone = copy_matrix(log_relations)
+    factors = [2, (prime - 1) / 2]
+
+    for f in factors:
+        matrix = finite_field_gauss_elimination(clone, f)
+        ncol = len(matrix[0])
+
+        # if one of the pivots is zero, the columns are not linearly independent.
+        for i in range(ncol - 1):
+            if matrix[i][i] == 0:
+                return False
+
+    return True
 
 def compute_logarithmic_relations(factor_base, prime, generator):
     log_relations = []
@@ -186,16 +177,12 @@ def compute_logarithmic_relations(factor_base, prime, generator):
 
 def find_relations(factor_base, prime, generator, log_relations, limit, start):
     for i in range(start, prime):
-        relation = [0] * len(factor_base)
+        relation = []
         sieving_value = (generator ** i) % prime
-        for j in range(len(factor_base)):
-            exponents = 0
-            while sieving_value % factor_base[j] == 0:
-                sieving_value /= factor_base[j]
-                exponents += 1
-            relation[j] = exponents
+        relation = is_smooth(sieving_value, factor_base)
 
-        if sieving_value == 1:
+        # if the value is smooth
+        if not not relation:
             relation.append(i)
             log_relations.append(relation)
 
@@ -204,35 +191,16 @@ def find_relations(factor_base, prime, generator, log_relations, limit, start):
 
     return log_relations
 
-def is_linearly_independent(log_relations, prime):
-    clone = copy_matrix(log_relations)
-    factors = [2, 7043]
+def solve_for_logarithms(log_relations, prime):
+    log_relations = finite_field_gauss_elimination(log_relations, prime)
+    log_relations = finite_field_reduce_matrix(log_relations, prime)
 
-    for f in factors:
-        matrix = finite_field_gauss_elimination(clone, f)
-        ncol = len(matrix[0])
+    return log_relations
 
-        # if one of the pivots is zero, the columns are not linearly independent.
-        for i in range(ncol - 1):
-            if matrix[i][i] == 0:
-                return False
-
-    return True
-
-def copy_matrix(matrix):
-    clone = []
-    for row in matrix:
-        _row = []
-        for value in row:
-            _row.append(value)
-        clone.append(_row)
-
-    return clone
-
-def find_logarithmic_solutions(log_relations, factor_base):
+def find_logarithmic_solutions(log_relations, factor_base, prime):
     solutions = []
     # we assume that the factorization is known
-    factors = [2, 7043]
+    factors = [2, (prime - 1) / 2]
 
     for f in factors:
         clone = copy_matrix(log_relations)
@@ -247,8 +215,8 @@ def find_logarithmic_solutions(log_relations, factor_base):
     return solutions
 
 # compute final solutions using Chinese Remainder Theorem
-def combine_solutions(solutions):
-    factors = [2, 7043]
+def combine_solutions(solutions, prime):
+    factors = [2, (prime - 1) / 2]
     solution = []
     for i in range(len(solutions[0])):
         congruences = []
@@ -260,12 +228,27 @@ def combine_solutions(solutions):
 
     return solution
 
-def compute_individual_log():
+def compute_individual_log(log_solution, prime, generator, output, factor_base):
+    log_coefficients = []
+    remainder = 0
+    result = 0
 
-    return
+    for s in range(1, prime - 2):
+        y = (output * generator ** s) % prime
+        log_coefficients = is_smooth(y, factor_base)
+        if not not log_coefficients:
+            remainder = s
+            break
 
-def compute_discrete_log(prime, generator, output):
-    factor_base = sieve_of_Eratosthenes(15)
+    for a, b in zip(log_coefficients, log_solution):
+        result += a*b
+
+    result = (result - remainder) % (prime - 1)
+
+    return result
+
+def compute_discrete_log(prime, generator, output, B):
+    factor_base = sieve_of_Eratosthenes(B)
     print 'Factor base', factor_base
     log_relations = compute_logarithmic_relations(factor_base, prime, generator)
 
@@ -275,15 +258,13 @@ def compute_discrete_log(prime, generator, output):
     # final solution.
 
     # Our prime p is 14087 --> p - 1 = 14086 = 2 * 7043
-    solutions = find_logarithmic_solutions(log_relations, factor_base)
-    final_solution = combine_solutions(solutions)
+    solutions = find_logarithmic_solutions(log_relations, factor_base, prime)
+    final_solution = combine_solutions(solutions, prime)
+    result = compute_individual_log(final_solution, prime,
+                                    generator, output, factor_base)
 
     print final_solution
-
-    # sample = [[1, 1, 0, 0, 0, 0, 0], [1, 0, 0, 1, 1, 0, 0],
-    # [1, 1, 0, 1, 0, 0, 0], [0, 1, 0, 0, 1, 0, 0],
-    # [1, 0, 1, 1, 0, 1, 0], [0, 0, 0, 1, 0, 0, 0],
-    # [0, 1, 0, 0, 1, 0, 0]]
+    print result
 
     return
 
@@ -293,21 +274,17 @@ def print_matrix(matrix):
     fmt = '\t'.join('{{:{}}}'.format(x) for x in lens)
     table = [fmt.format(*row) for row in s]
     print '\n'.join(table) + '\n'
+
     return
 
 def main():
     generator = 5
     prime = 14087
-    output = 20
+    output = 5872
+    B = 15
 
-    # matrix = [[1, 1, 0, 0, 0, 0, 2], [1, 0, 0, 1, 1, 0, 2],
-    #             [1, 1, 0, 1, 0, 0, 2],[0, 1, 0, 0, 1, 0, 2],
-    #             [1, 0, 1, 1, 0, 1, 2], [0, 0, 0, 1, 0, 0, 0],
-    #             [0, 1, 0, 0, 1, 0, 2]]
+    compute_discrete_log(prime, generator, output, B)
 
-    compute_discrete_log(prime, generator, output)
-    # x = chinese_remainder([5, 7, 11], [3, 5, 7])
-    # print x
     return
 
 if __name__ == '__main__':
