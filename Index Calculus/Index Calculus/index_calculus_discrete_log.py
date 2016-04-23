@@ -8,10 +8,10 @@ stage consists of searching for a set of linearly independent smooth relations
 for the logarithms of the factor base. Each relation results from factoring
 a power of the generator of the finite field completely over the factor base.
 The second stage solves the linear systems of the logarithms using Gauss
-elimination. The third stage computes the logarithm of a desired field element.
+elimination. The third stage computes the logarithm of a desired field element. 
 
 Author/copyright: Tien Ho. All rights reserved.
-Date last modified: 21 April 2016
+Date last modified: 23 April 2016
 """
 
 def print_matrix(matrix, prime):
