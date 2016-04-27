@@ -8,7 +8,7 @@ stage consists of searching for a set of linearly independent smooth relations
 for the logarithms of the factor base. Each relation results from factoring
 a power of the generator of the finite field completely over the factor base.
 The second stage solves the linear systems of the logarithms using Gauss
-elimination. The third stage computes the logarithm of a desired field element. 
+elimination. The third stage computes the logarithm of a desired field element.
 
 Author/copyright: Tien Ho. All rights reserved.
 Date last modified: 23 April 2016
@@ -76,9 +76,6 @@ def print_solution(factor_base, log_coefficients, solution, b, g, s, p, result):
     field element
     """
     print 'BRUTE FORCE SEARCH FINDS THAT'
-    print '{0:>18}'.format(''), \
-          ''.join(['{0:>7}'.format('[{0:}]'.format(str(f)))
-                   for f in factor_base])
 
     clone = log_coefficients[:]
     print '{0:2}'.format(''), \
@@ -306,6 +303,8 @@ def finite_field_gauss_elimination(matrix, prime):
                     matrix = swap_rows(matrix,prow,j)
                     break
 
+        # if we cannot find a nonzero for our pivot in the current column,
+        # this column is free and we move to the next
         while matrix[prow][pcol] == 0 and pcol < (ncol - 1):
             pcol += 1
             for j in range(prow+1,nrow):

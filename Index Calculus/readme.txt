@@ -9,7 +9,9 @@ for a set of linearly independent smooth relations between the factor base and
 the powers of the generator of the finite field. The second stage solves the
 linear system of smooth relations using Gauss-Jordan elimination to find
 the logarithms of the factor base. The third stage computes the discrete
-logarithm of a desired field element.
+logarithm of a desired field element. This program is based off of the paper 
+"The Index Calculus Algorithm for Discrete Logarithms" (p.18-21) by
+Jason S. Howell. This article is included in the same directory of the program.
 
 We test the program using the prime field 14087, the primitive root 5, and the
 desired field element 5872. In short, our program seeks to solve for the
